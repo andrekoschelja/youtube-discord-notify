@@ -1,0 +1,38 @@
+name: YouTube Discord Notify
+
+  on:
+    schedule:
+      - cron: "*/15 * * * *"
+    workflow_dispatch:                   
+
+  permissions:
+    contents: write
+
+  jobs:
+    check:
+      runs-on: ubuntu-latest
+      steps:                             
+        - name: Projekt holen
+          uses: actions/checkout@v4
+
+        - name: Python einrichten
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.12"
+                                         
+        - name: Bibliothek installieren
+          run: pip install requests
+
+        - name: Nach neuen Videos pruefen
+          env:
+            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          run: python cloud_youtube_notify.py
+
+        - name: Merk-Datei speichern (damit nichts doppelt gepostet wird)
+          run: |
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
+            git add gesehene_videos.json 
+            git commit -m "Update: gesehene Videos" || echo "Keine Aenderung 
+  noetig"
+            git push || echo "Nichts zu pushen"
